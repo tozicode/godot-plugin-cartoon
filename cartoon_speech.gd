@@ -164,30 +164,38 @@ func _on_changed_frame():
 ## 話者設定が変更された時に実行される処理。
 func _on_changed_speaker():
 	var styles = get_speaker_styles()
+	var theme_style_name := "cartoon"
 	if speaker_id > 0 and speaker_id <= styles.size():
 		var style = styles[speaker_id - 1]
 		frame.modulate = style.frame_color
 		if style.label_settings != null:
 			label.label_settings = style.label_settings
+		if not style.theme_style_name.is_empty():
+			theme_style_name = style.theme_style_name
 	else:
 		# デフォルト: 白フレーム + 黒テキスト
 		frame.modulate = Color.WHITE
 		var default_label_settings_path = FRAME_SCENE_DIR + "/label_settings_black.tres"
 		if ResourceLoader.exists(default_label_settings_path):
 			label.label_settings = load(default_label_settings_path)
-	# Localization プラグインで "cartoon" スタイルの Theme が定義されていれば適用する。
-	# label_settings 側ではフォントを指定せず、Theme からフォント・サイズを取得する設計。
-	_apply_cartoon_theme()
+	# label_settings は色・アウトラインのみを司り、フォントとサイズは Theme から取得する設計。
+	_apply_cartoon_theme(theme_style_name)
 
 
-## "cartoon" スタイルの Theme を Label に適用する。
-## Localization 側で未定義の場合は何もしない（label.theme はそのまま）。
-func _apply_cartoon_theme():
+## 指定スタイルの Theme を Label に適用し、フォントサイズを label_settings に同期する。
+## Localization 側で Theme が未定義の場合は何もしない（label.theme はそのまま）。
+## Godot の Label は label_settings.font_size > 0 が Theme よりも優先されるため、
+## Theme のサイズを反映させるには label_settings 側へ明示的にコピーする必要がある。
+func _apply_cartoon_theme(theme_style_name :String):
 	if not is_instance_valid(Localization):
 		return
-	var t = Localization.get_theme("cartoon")
-	if t != null:
-		label.theme = t
+	var t = Localization.get_theme(theme_style_name)
+	if t == null:
+		return
+	label.theme = t
+	if t.has_font_size("font_size", "Label") and label.label_settings != null:
+		label.label_settings = label.label_settings.duplicate()
+		label.label_settings.font_size = t.get_font_size("font_size", "Label")
 
 
 ## テキスト内容が変更された時に実行される処理。
@@ -234,11 +242,14 @@ func _resize_label():
 	var font = _get_active_font()
 	if font == null:
 		return
+	var font_size = _get_active_font_size()
 	var lines = label.text.split("\n")
 	var size_new :Vector2 = Vector2.ZERO
 	for line in lines:
-		size_new.x = max(size_new.x, font.get_string_size(line).x)
-	size_new.y = font.get_height(lines.size())
+		size_new.x = max(
+			size_new.x,
+			font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+	size_new.y = font.get_height(font_size) * lines.size()
 	label.size = size_new
 
 
@@ -251,6 +262,16 @@ func _get_active_font() -> Font:
 	if label.has_theme_font("font", "Label"):
 		return label.get_theme_font("font", "Label")
 	return null
+
+
+## Label が実際に使うフォントサイズを返す。
+## label_settings.font_size が正の値ならそれを優先し、それ以外は Theme から取得する。
+func _get_active_font_size() -> int:
+	if label.label_settings != null and label.label_settings.font_size > 0:
+		return label.label_settings.font_size
+	if label.has_theme_font_size("font_size", "Label"):
+		return label.get_theme_font_size("font_size", "Label")
+	return 16
 
 
 ## オブジェクトの内容をファイルに書き出す。
