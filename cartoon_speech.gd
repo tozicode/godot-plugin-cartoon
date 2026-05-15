@@ -175,6 +175,19 @@ func _on_changed_speaker():
 		var default_label_settings_path = FRAME_SCENE_DIR + "/label_settings_black.tres"
 		if ResourceLoader.exists(default_label_settings_path):
 			label.label_settings = load(default_label_settings_path)
+	# Localization プラグインで "cartoon" スタイルの Theme が定義されていれば適用する。
+	# label_settings 側ではフォントを指定せず、Theme からフォント・サイズを取得する設計。
+	_apply_cartoon_theme()
+
+
+## "cartoon" スタイルの Theme を Label に適用する。
+## Localization 側で未定義の場合は何もしない（label.theme はそのまま）。
+func _apply_cartoon_theme():
+	if not is_instance_valid(Localization):
+		return
+	var t = Localization.get_theme("cartoon")
+	if t != null:
+		label.theme = t
 
 
 ## テキスト内容が変更された時に実行される処理。
@@ -218,13 +231,26 @@ func _on_changed_text():
 
 ## テキスト内容に応じて label のサイズを調整する。
 func _resize_label():
-	var font = label.label_settings.font
+	var font = _get_active_font()
+	if font == null:
+		return
 	var lines = label.text.split("\n")
 	var size_new :Vector2 = Vector2.ZERO
 	for line in lines:
 		size_new.x = max(size_new.x, font.get_string_size(line).x)
 	size_new.y = font.get_height(lines.size())
 	label.size = size_new
+
+
+## Label が実際に使うフォントを返す。
+## label_settings に font が設定されていればそれを優先し、
+## なければ Theme から解決する（label.theme → 親ノード → ルート Theme の順）。
+func _get_active_font() -> Font:
+	if label.label_settings != null and label.label_settings.font != null:
+		return label.label_settings.font
+	if label.has_theme_font("font", "Label"):
+		return label.get_theme_font("font", "Label")
+	return null
 
 
 ## オブジェクトの内容をファイルに書き出す。
