@@ -135,8 +135,11 @@ func _ready() -> void:
 	# ランタイムでも changed_text シグナルに応じた処理を設定しておく
 	changed_text.connect(_on_changed_text)
 
-	_on_changed_text()
+	# speaker → text の順で呼ぶこと。逆だと _resize_label() が theme 適用前の
+	# label_settings.font_size (LabelSettings デフォルト 16) で計算してしまい、
+	# フレームがテキスト (実 30pt) より小さくなる。
 	_on_changed_speaker()
+	_on_changed_text()
 
 
 ## フレーム種別が変更された時に実行される処理。
