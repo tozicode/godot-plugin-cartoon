@@ -2,6 +2,12 @@
 extends Resource
 class_name CartoonSpeakerStyle
 
+## 話者の識別名。
+## CartoonSpeech.speaker_id をインスペクターで選択する際の表示ラベルとして使われる。
+## 空文字列の場合は "SPEAKER_<index>" の形にフォールバックする。
+@export
+var name :StringName = &""
+
 ## 吹き出しフレームの色。
 @export
 var frame_color :Color = Color.WHITE

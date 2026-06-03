@@ -84,6 +84,22 @@ var position_delta :Vector2:
 	get: return LABEL_POSITIONS_RELATIVE[frame_type]
 
 
+## インスペクター上で speaker_id を選択する際の表示を、
+## 話者スタイルリストの各 name に基づいた enum 風ドロップダウンに差し替える。
+func _validate_property(property :Dictionary) -> void:
+	if property.name != "speaker_id":
+		return
+	var hint_parts := PackedStringArray(["DEFAULT:0"])
+	var styles := get_speaker_styles()
+	for i in styles.size():
+		var label_text := String(styles[i].name)
+		if label_text.is_empty():
+			label_text = "SPEAKER_%d" % (i + 1)
+		hint_parts.append("%s:%d" % [label_text, i + 1])
+	property.hint = PROPERTY_HINT_ENUM
+	property.hint_string = ",".join(hint_parts)
+
+
 ## 話者スタイル配列をロードして返す。
 static func get_speaker_styles() -> Array[CartoonSpeakerStyle]:
 	if not _speaker_styles_cache.is_empty():
