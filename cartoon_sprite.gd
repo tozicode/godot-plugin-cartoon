@@ -14,11 +14,16 @@ const SUPPORTED_EXTENSIONS := [".png", ".jpg"]
 
 
 ## スプライトのファイル名から拡張子を取り払った部分の文字列。
+## 値が更新されると対応する画像を自動的にロードして texture にセットする。
 @export
 var sprite_name :String:
 	get: return sprite_name
 	set(value):
 		sprite_name = value
+		if sprite_name.is_empty():
+			texture = null
+		else:
+			texture = load(sprite_name_to_filepath(sprite_name))
 		changed_sprite_name.emit()
 
 
@@ -57,13 +62,13 @@ static func sprite_name_to_filepath(sprite_name :String) -> String:
 
 
 ## バイナリファイルから CartoonSprite を生成して返す。
+## texture は sprite_name のセッターが自動的にロードする。
 static func create_from_file(fin :FileAccess) -> CartoonSprite:
 	var sprite = CartoonSprite.new()
 	sprite.position = Utility.read_vector2(fin)
 	sprite.scale = Utility.read_vector2(fin)
 	sprite.rotation = fin.get_float()
 	sprite.sprite_name = fin.get_pascal_string()
-	sprite.texture = load(sprite_name_to_filepath(sprite.sprite_name))
 	return sprite
 
 
