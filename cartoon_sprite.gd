@@ -13,6 +13,12 @@ const DEFAULT_SPRITES_DIRECTORY := "res://cartoon/sprites"
 const SUPPORTED_EXTENSIONS := [".png", ".jpg"]
 
 
+## CartoonSprite はコマ内の座標を左上基準で扱うため、Sprite2D の centered の
+## デフォルト (true) を上書きして常に左上原点にする。
+func _init():
+	centered = false
+
+
 ## スプライトのファイル名から拡張子を取り払った部分の文字列。
 ## 値が更新されると対応する画像を自動的にロードして texture にセットする。
 @export
