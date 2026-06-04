@@ -9,6 +9,9 @@ signal changed_sprite_name
 const SETTING_SPRITES_DIRECTORY := "cartoon/sprites_directory"
 const DEFAULT_SPRITES_DIRECTORY := "res://cartoon/sprites"
 
+## スプライトとして扱う画像ファイル拡張子。優先順位順に並べる。
+const SUPPORTED_EXTENSIONS := [".png", ".jpg"]
+
 
 ## スプライトのファイル名から拡張子を取り払った部分の文字列。
 @export
@@ -27,20 +30,30 @@ static func get_sprite_dir() -> String:
 
 
 ## 指定のファイルパスに対応するスプライト名を返す。
+## SUPPORTED_EXTENSIONS のいずれかで終わるパスを受け付ける。
 static func filepath_to_sprite_name(filepath :String):
 	var sprite_dir = get_sprite_dir()
-	if not filepath.ends_with(".png") or not filepath.begins_with(sprite_dir):
+	if not filepath.begins_with(sprite_dir):
 		return ""
-	return filepath.substr(
-		sprite_dir.length() + 1,
-		filepath.length() - sprite_dir.length() - 5)
+	for ext in SUPPORTED_EXTENSIONS:
+		if filepath.ends_with(ext):
+			return filepath.substr(
+				sprite_dir.length() + 1,
+				filepath.length() - sprite_dir.length() - 1 - ext.length())
+	return ""
 
 
 ## スプライト名からファイルパスを生成して返す。
-static func sprite_name_to_filepath(sprite_name :String):
+## 実ファイルが存在する拡張子を SUPPORTED_EXTENSIONS の順序で探索する。
+## 見つからない場合は先頭拡張子 (.png) を付けたパスを返す。
+static func sprite_name_to_filepath(sprite_name :String) -> String:
 	if sprite_name.is_empty():
 		return ""
-	return get_sprite_dir() + "/" + sprite_name + ".png"
+	var base = get_sprite_dir() + "/" + sprite_name
+	for ext in SUPPORTED_EXTENSIONS:
+		if FileAccess.file_exists(base + ext):
+			return base + ext
+	return base + SUPPORTED_EXTENSIONS[0]
 
 
 ## バイナリファイルから CartoonSprite を生成して返す。
