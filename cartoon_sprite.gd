@@ -20,7 +20,8 @@ func _init():
 
 
 ## スプライトのファイル名から拡張子を取り払った部分の文字列。
-## 値が更新されると対応する画像を自動的にロードして texture にセットする。
+## 値が更新されると対応する画像を自動的にロードして texture にセットし、
+## ノード名もスプライト名と同期する（識別性のため）。
 @export
 var sprite_name :String:
 	get: return sprite_name
@@ -28,8 +29,12 @@ var sprite_name :String:
 		sprite_name = value
 		if sprite_name.is_empty():
 			texture = null
+			name = "Empty"
 		else:
 			texture = load(sprite_name_to_filepath(sprite_name))
+			# Godot のノード名は "/" や "." 等を含められず、Node が自動的に
+			# "_" に置換する。そのままそのまま代入してよい。
+			name = sprite_name
 		changed_sprite_name.emit()
 
 
