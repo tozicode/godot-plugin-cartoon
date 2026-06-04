@@ -5,6 +5,7 @@
 [ext_resource type="Script" path="res://addons/cartoon/cartoon_layout.gd" id="2_wv60r"]
 
 [sub_resource type="Resource" id="Resource_780tq"]
+resource_local_to_scene = true
 script = ExtResource("2_wv60r")
 
 [node name="CartoonPanel" type="Node2D" unique_id=362313415]
