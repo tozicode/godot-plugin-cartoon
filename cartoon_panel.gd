@@ -453,6 +453,17 @@ func get_shape() -> PanelShape:
 		_: return PanelShape.UNKNOWN
 
 
+## セリフ（Speeches）とオノマトペ（Onomatopoeias）の表示状態を切り替える。
+## @onready 変数を介さず直接ノード参照することで、_ready 前後どちらからも安全に呼べる。
+func set_speeches_and_onomatopoeias_visible(value :bool):
+	var speeches_node = get_node_or_null("Speeches")
+	var onomatopoeias_node = get_node_or_null("Onomatopoeias")
+	if speeches_node != null:
+		speeches_node.visible = value
+	if onomatopoeias_node != null:
+		onomatopoeias_node.visible = value
+
+
 ## コマに含まれる CartoonSpeech の数を返す。
 func count_speeches():
 	return speeches.get_child_count()
