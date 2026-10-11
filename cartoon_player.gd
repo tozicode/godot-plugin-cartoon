@@ -156,17 +156,26 @@ func _on_left_mouse_released(release_pos :Vector2):
 	var abs_dy = abs(dy)
 	var abs_dx = abs(dx)
 
-	last_swipe_direction = SwipeDirection.NONE
+	var swipe_direction := SwipeDirection.NONE
 	if abs_dy >= abs_dx:
 		if dy >= SWIPE_MIN_DISTANCE:
-			last_swipe_direction = SwipeDirection.DOWN
+			swipe_direction = SwipeDirection.DOWN
 		elif -dy >= SWIPE_MIN_DISTANCE:
-			last_swipe_direction = SwipeDirection.UP
+			swipe_direction = SwipeDirection.UP
 	else:
 		if dx >= SWIPE_MIN_DISTANCE:
-			last_swipe_direction = SwipeDirection.LEFT_TO_RIGHT
+			swipe_direction = SwipeDirection.LEFT_TO_RIGHT
 		elif -dx >= SWIPE_MIN_DISTANCE:
-			last_swipe_direction = SwipeDirection.RIGHT_TO_LEFT
+			swipe_direction = SwipeDirection.RIGHT_TO_LEFT
+
+	progress_to_next(swipe_direction)
+
+
+## コマを次へ送る。
+## スワイプ方向の判定から切り離してあるのは、キーボードのように
+## 座標を持たない操作からも同じ送りを行えるようにするためである。
+func progress_to_next(swipe_direction :SwipeDirection = SwipeDirection.NONE) -> void:
+	last_swipe_direction = swipe_direction
 
 	if _has_pending_scenes():
 		progressed.emit()
@@ -177,6 +186,22 @@ func _on_left_mouse_released(release_pos :Vector2):
 	else:
 		if last_swipe_direction == SwipeDirection.NONE:
 			progressed_finished.emit()
+
+
+## 座標を持たない操作（キーボード等）でコマを送る。
+## 最新コマを見ていない場合は、クリックと同じく最新コマへジャンプするだけに留める。
+##
+## 入力そのものはここでは受け取らない。漫画は画面の最下層に置かれることがあり、
+## その場合クリックは上に重ねたシーンに遮られるがキー入力は遮られないため、
+## 「どの操作でいつ送るか」は利用側が決めるべきものである。
+func progress_by_key() -> void:
+	if count_panels() == 0:
+		return
+	if focus_index != count_panels() - 1:
+		# 最新コマへジャンプする。
+		focus_index = -1
+		return
+	progress_to_next()
 
 
 ## フォーカスを変更した時に実行される処理。
